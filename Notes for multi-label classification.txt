@@ -1,0 +1,23 @@
+Multi-Label Classification
+The only difference is that a data sample can belong to multiple classes. 
+We have to handle a few things differently in multi-label classification.
+Activation Function
+The final score for each class should be independent of each other. 
+Thus we can not apply softmax activation, because softmax converts the
+ score into probabilities taking other scores into consideration.
+
+Data Imbalance in Multi-Label Classification:
+For example, if a dataset consists of 100 cat and 900 dog images.
+If we train the neural net on this data, it will just learn to predict
+dog every time
+
+Databases used:
+809 pokemon pngs, also arranged by type: https://github.com/rileynwong/pokemon-images-dataset-by-type
+
+Have error handling:
+For example File error things. Do it in the core functions.
+  
+Paths for python.exe
+C:\Users\Nelson\AppData\Roaming\Python\Python37\Scripts
+C:\Users\Nelson\Anaconda3\pkgs\python-3.7.4-h5263a28_0\python.exe
+C:/Users/Nelson/AppData/Local/Programs/Python/Python38-32/python.exe
