@@ -10,6 +10,7 @@ from keras.models import Sequential, load_model
 from keras.layers.core import Dense, Flatten, Dropout, Activation
 from keras.layers import Conv2D, MaxPool2D, BatchNormalization
 import skimage.transform as transform
+from copy import deepcopy
 
 def get_key(val,my_dict):
     '''Get key from dictionary value
@@ -137,7 +138,7 @@ Y = np.load(relative_path2, allow_pickle=True)
 
 X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.2)
 
-print(X_train.shape, Y_train.shape,X_test.shape, Y_test.shape)
+# print(X_train.shape, Y_train.shape,X_test.shape, Y_test.shape)
 
 
 def build_NN(x_train, y_train, x_test, y_test,
@@ -176,7 +177,8 @@ def build_NN(x_train, y_train, x_test, y_test,
     # keras.model()
     # model(input layers, train_data x and train data y ), activation func
     # model.add(Dense(number_of_layers))
-    for each_image in x_train:
+
+    for each_image in x_train:#blur
         each_image = transform.resize(each_image, (each_image.shape[0] // 4, \
                                                 each_image.shape[1] // 4), \
                                     anti_aliasing=True)
@@ -253,16 +255,35 @@ poke_model_name = "Models/Pokemon_ML_no_Normalization.h5"
 full_path = os.path.join(os.getcwd(),poke_model_name)
 
 poke_model = load_model(full_path)
-test = X_test[735]
-y_prob = poke_model.predict(test.reshape(1,100,100,3),verbose=1) #Returns array of array
-print(y_prob)
-top3 = np.argsort(y_prob[0])[:-4:-1] # argsort returns index of items in descending order
-print(top3) #17,12,7
+test = X_test[73]
+# print(test)
+# plt.imshow(test)
+# plt.show()
+# y_prob = poke_model.predict(test.reshape(1,100,100,3),verbose=1) #Returns array of array
+# print(y_prob)
+# top3 = np.argsort(y_prob[0])[:-4:-1] # argsort returns index of items in descending order
+# print(top3) #17,12,7
 
-for i in range(3):
-    print(type_list[top3[i]])
-plt.imshow(test)
-plt.show()
+# for i in range(3):
+#     print(type_list[top3[i]])
+
+def pokemon_type_predict(image_array):
+    tester = X_train[np.random.randint(0,1000)] #
+    testee = deepcopy(tester) #
+    plt.imshow(testee)#
+    plt.show() #
+    label_p = poke_model.predict(np.array([testee]),verbose=1) #reshaped already to right size
+    top_label, second_label =  np.argsort(label_p[0])[:-3:-1]
+    if top_label > 2.5* second_label:#2.5 is a threshold I picked
+        return type_list[top_label], None
+    top_type, second_type = type_list[top_label], type_list[second_label]
+    return top_type, second_type
+
+# type1, type2 = pokemon_type_predict(test)
+# print(type1, type2)
+
+# plt.imshow(test)
+# plt.show()
 
 # # print(one_hot_to_type([0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0]))
 
