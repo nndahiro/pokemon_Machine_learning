@@ -66,7 +66,7 @@ if __name__ == '__main__':
             '''
             super(GUI, self).__init__() # All inherited functionality of Tk class
             self.title("Pokemon: \n AI GUI (TM)")
-            self.minsize(200,200)
+            self.minsize(200,500)
             self.buttons = buttons
             self.panels = panels
 
@@ -76,20 +76,21 @@ if __name__ == '__main__':
             if type_of_button.lower() == 'browse':
                 button = Button(self, text= name, padx=30, pady=10,
                              command = lambda: self.file_explorer(entry_box)) #Can't call function so Have to use lambda
-                self.buttons.append([name,b_row,b_column, type_of_button])
+                self.buttons.append([button,name,b_row,b_column, type_of_button])
             elif type_of_button.lower() == "predict":
                 type_of_b = None #TODO
                 self.loadimage = PhotoImage(file="C:/Users/Nelson/Pictures/pokeball2.png")
                 button = Button(self, image=self.loadimage,
                              command = lambda: self.image_plotter_predictor(entry_box))
                 button["border"] = "0" #No borders
-                self.buttons.append([name,b_row,b_column, type_of_button])
+                self.buttons.append([button,name,b_row,b_column, type_of_button])
                 # self.roundedbutton["bg"] = "white"
                 # self.roundedbutton["border"] = "0"
                 # self.roundedbutton.pack(side="top")
                 # button = Button(self, text= name, padx=40, pady=20)
             elif type_of_button.lower() == "try again":
-                ''' Remove all panels and start over'''
+                ''' Button where command is to
+                Remove all panels and start over'''
                 for each_panel in self.panels:
                     each_panel.destroy()
             
@@ -113,13 +114,13 @@ if __name__ == '__main__':
                     image_name = str(entry_box.get())
                     #Use PIL module so that this works with all image formats:
                     img = ImageTk.PhotoImage(Image.open(image_name).resize((200,200)))
-                    panel = Label(self, image=img)
+                    panel = self.panel(self, image=img)
                     panel.image = img 
                     # ^THIS IS needed as a reference python will get rid of image while parsing: Tkinter issue
                     #ref http://effbot.org/pyfaq/why-do-my-tkinter-images-not-appear.htm
                     panel.grid(row = 4, column = 0, columnspan= 3)
                     #Now that images is loaded, we also put a message:
-                    msg = Label(self, text= "Your Picture:", bg="#7ABBEC")
+                    msg = self.panel(text= "Your Picture:", bg="#7ABBEC")
                     msg.grid(row=3, column= 1, columnspan=1)
                     print("Picture In")
                     predict_img = array_image(image_name) #turn to array so model can use it
@@ -127,33 +128,41 @@ if __name__ == '__main__':
                     #predict_img_resized_for_model = np.expand_dims(predict_img_resized_for_model, axis=0)
                     # ^Reshaped to (1,100,100,3) for model
                     type1, type2 = ptp(predict_img_resized_for_model)
-                    type1_panel = Label()
-                    type1_panel.grid(row=5, column=0)
-                    type2_panel = Label()
-                    type2_panel.grid(row=5, column=0)
+                    # type1_panel = Label()
+                    # type1_panel.grid(row=5, column=0)
+                    # type2_panel = Label()
+                    # type2_panel.grid(row=5, column=0)
                     #One way of removing labels is to set it to be blank
                     #Then deleting it everytime before reassigning a new
                     #label
+                    if len(self.panels) >=3:
+                        print(f'Destroying panels... list= {len(self.panels)}')
+                        for each_panel_besides_picture in range(len(self.panels)-2):
+                            self.panels[2+each_panel_besides_picture].destroy()
+                        # self.panels[2].destroy()
+                        # self.panels[3].destroy()
+                        # self.panels[4].destroy()
+                        del self.panels[2:]#remove all panels from list except image and "your pic"
+                        print(f'Destroy-ED panels... list= {len(self.panels)}')
+                    #Also delete from list
                     if type2 == None:
                         # global type1_panel
                         # global type2_panel
-                        type1_panel.destroy()
-                        type2_panel.destroy()
-                        message = Label(text="Your prediction:", padx = 50, pady=30)
+                        message = self.panel(text="Your prediction:", padx = 50, pady=30)
                         message.grid(row=5, column=0,columnspan=1)
-                        type1_panel = Label(text=type1, bg=dict_color[type1], padx=40, pady=20, font=0.6)
+                        type1_panel = self.panel(text=type1, bg=dict_color[type1], padx=40, pady=20)#, font="Helvetica")
                         type1_panel.grid(row=5, column=1, columnspan=1)
                     else:
                         # global type1_panel
                         # global type2_panel
-                        type1_panel.destroy()
-                        type2_panel.destroy()
-                        message = Label(text="Your prediction:", padx = 50, pady=30)
+                        print(len(self.panels))
+                        message = self.panel(text="Your prediction:", padx = 50, pady=30, bg="#7ABBEC")
                         message.grid(row=5, column=0,columnspan=1)
-                        type1_panel = Label(text=type1, bg=dict_color[type1], padx=40, pady=20, font=0.6)
+                        type1_panel = self.panel(text=type1, bg=dict_color[type1], padx=40, pady=20)#, font="Helvetica")
                         type1_panel.grid(row=5, column=1, columnspan=1)
-                        type2_panel = Label(text=type2, bg=dict_color[type2], padx=40, pady=20, font=0.6)
+                        type2_panel = self.panel(text=type2, bg=dict_color[type2], padx=40, pady=20)#, font=0.6)
                         type2_panel.grid(row=5, column=2, columnspan=1)
+                        print(len(self.panels))
                     
 
 
@@ -167,8 +176,10 @@ if __name__ == '__main__':
             else:
                 return #If nothing is entered, do nothing
 
-        def panel(self):
-            return            
+        def panel(self, text="", bg=None, padx=1, pady=1, image=None):#, font="Helvetica"):
+            created_panel = Label(text=text, bg=bg, padx=padx, pady=pady, image=image)
+            self.panels.append(created_panel)
+            return created_panel     
 
 
 
