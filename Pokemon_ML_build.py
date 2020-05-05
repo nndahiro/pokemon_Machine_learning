@@ -340,7 +340,7 @@ def pokemon_type_predict(image_array, random=False, threshold=2.5):# add random 
     # tester = p_X[np.random.randint(0,4000)] #
     # testee = deepcopy(tester) #
     # plt.imshow(testee)#
-    # plt.show() #
+    # plt.show() ##
     #image_array reshaped to right shape.
     label_p = poke_model.predict(np.array([image_array]),verbose=1)
     
