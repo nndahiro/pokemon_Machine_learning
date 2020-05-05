@@ -7,40 +7,13 @@ from PIL import ImageTk, Image
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from Pokemon_ML_build import pokemon_type_predict as ptp
 import numpy as np
-from Image_processing import array_image, image_array_resize
+from Image_processing import array_image, image_array_resize, centralize_image
 
 
 if __name__ == '__main__':
-    class TurtleGui():
-        def __init__(self, turtle):
-            self.t = turtle
-        def forwardi(self):
-            self.t.forward(distance=20)
-        def turn_left(self):
-            self.t.left(30)
-        def turn_right(self):
-            turtle.right(30)
-        def translate(x,y):
-            turtle.goto(x,y)
-        def sleep(self):
-            turtle.bye()
-    # turtle.setup(300,300)
-    # window = turtle.Screen()
-    # window.title('GUI first ting')
-    # window.bgcolor("blue")
-    # tortue_genial = TurtleGui(turtle.Turtle())
-    # tortue_genial.t.color('green')
-    # tortue_genial.t.shape('turtle')
-    # tortue_genial.t.pensize(5)
-    # window.onkey(tortue_genial.forwardi, "Up")
-    # window.onkey(tortue_genial.turn_left, "Left")
-    # window.onkey(tortue_genial.sleep, "s")
-    # window.onclick(tortue_genial.translate) #guess it takes coordinates as input
-    # window.listen()
-    # window.mainloop()
     #dark colors: dragon, dark, ghost, 
     dict_color = {'bug': "#666600",
-                    'dark': "black",
+                    'dark': "gray",
                     'dragon': "#000066",
                     'electric': "yellow",
                     'fairy': "lightpink",
@@ -60,15 +33,33 @@ if __name__ == '__main__':
                     'None': "#E0E0E0"}
 
     class GUI(Tk):
-        def __init__(self, buttons=[], panels=[]):
-            ''' Will define main GUI Characterisitics like
-            Size, icon, background, name, shape/columns?
+        def __init__(self, buttons=[], panels=[], images=[]):
+            ''' The GUI class is a class that inherits all attributes
+            of the Tk class from tkinter module with additional
+            functionality that we use. It is a Graphical User Interface
+            with buttons, panels, images and an entrybox. These are all
+            specified as the GUI class instance is built
+            **Parameters**
+                buttons: *Tkinter Button Object*
+                        This is a button that will be added to our
+                        GUI through the .button method. Buttons can
+                        call a command when they are clicked.
+                panels: *Tkinter Panel Object*
+                        This is text that appears in the GUI that is not
+                        a button.
+                images: *ImageTk PhotoImage Object*
+                        This is an image that can be displayed in the GUI.
+                        It can only be accessed with the PIL module.
+            **Returns**
+                None
+                Simply instanciates the class object.
             '''
-            super(GUI, self).__init__() # All inherited functionality of Tk class
-            self.title("Pokemon: \n AI GUI (TM)")
+            super(GUI, self).__init__()
+            self.title("Pokemon: AI GUI (TM)")
             self.minsize(200,500)
             self.buttons = buttons
             self.panels = panels
+            self.images = images
 
         def button(self, name, b_row, b_column, type_of_button, entry_box=None):
             ''' Create a button, specify name, location and type
@@ -79,7 +70,7 @@ if __name__ == '__main__':
                 self.buttons.append([button,name,b_row,b_column, type_of_button])
             elif type_of_button.lower() == "predict":
                 type_of_b = None #TODO
-                self.loadimage = PhotoImage(file="C:/Users/Nelson/Pictures/pokeball2.png")
+                self.loadimage = PhotoImage(file=os.path.join(os.getcwd(),"pokeball2.png"))
                 button = Button(self, image=self.loadimage,
                              command = lambda: self.image_plotter_predictor(entry_box))
                 button["border"] = "0" #No borders
@@ -109,13 +100,34 @@ if __name__ == '__main__':
             return filename #So we have access to the path string
 
         def image_plotter_predictor(self, entry_box):
+            '''
+            This is the command of the 'predict' button of the GUI.
+            It takes the path given by the entry box, retrieves the
+            image and plots it as a panel in the GUI. It then converts
+            the image to an array and changes its' shape to the model
+            input shape. Then the array is run through the Neural network
+            and the top1 or 2 pokemon types are displayed based on a thr
+            -eshold. This button can be re-pressed within one mainloop.
+            **Parameters**
+                entry_box: *Tkinter Entry Object"
+                        This is the entry where the image path is taken.
+            **Returns**
+                None
+
+            '''
             if len(entry_box.get()) > 0:
                 try:
                     image_name = str(entry_box.get())
                     #Use PIL module so that this works with all image formats:
                     img = ImageTk.PhotoImage(Image.open(image_name).resize((200,200)))
-                    panel = self.panel(self, image=img)
-                    panel.image = img 
+                    if len(self.images) >0: #if there's already an image
+                        self.images[0].destroy() #remove image
+                        self.images.pop()
+                        panel = self.panel(image=img) #put new one
+                        panel.image = img #keep a ref
+                    else: #no image prior
+                        panel = self.panel(image=img)
+                        panel.image = img 
                     # ^THIS IS needed as a reference python will get rid of image while parsing: Tkinter issue
                     #ref http://effbot.org/pyfaq/why-do-my-tkinter-images-not-appear.htm
                     panel.grid(row = 4, column = 0, columnspan= 3)
@@ -123,10 +135,12 @@ if __name__ == '__main__':
                     msg = self.panel(text= "Your Picture:", bg="#7ABBEC")
                     msg.grid(row=3, column= 1, columnspan=1)
                     print("Picture In")
-                    predict_img = array_image(image_name) #turn to array so model can use it
-                    predict_img_resized_for_model = image_array_resize(predict_img, (100,100,3))
+                    predict_img = array_image(image_name, verbose=False) #turn to array so model can use it
+                    #Crop picture
+                    #clean_image = centralize_image(predict_img)
+                    predict_img_resized_for_model = image_array_resize(predict_img, (64,64,3))
                     #predict_img_resized_for_model = np.expand_dims(predict_img_resized_for_model, axis=0)
-                    # ^Reshaped to (1,100,100,3) for model
+                    #TODO: Change to HSV if needed
                     type1, type2 = ptp(predict_img_resized_for_model)
                     # type1_panel = Label()
                     # type1_panel.grid(row=5, column=0)
@@ -135,26 +149,23 @@ if __name__ == '__main__':
                     #One way of removing labels is to set it to be blank
                     #Then deleting it everytime before reassigning a new
                     #label
-                    if len(self.panels) >=3:
+                    if len(self.panels) >=3:#more than msg, type, "your predict": msg
                         print(f'Destroying panels... list= {len(self.panels)}')
-                        for each_panel_besides_picture in range(len(self.panels)-2):
-                            self.panels[2+each_panel_besides_picture].destroy()
+                        for each_panel_besides_msg in range(len(self.panels)-1):
+                            self.panels[1+each_panel_besides_msg].destroy()#Destroy except msg
                         # self.panels[2].destroy()
                         # self.panels[3].destroy()
                         # self.panels[4].destroy()
-                        del self.panels[2:]#remove all panels from list except image and "your pic"
+                        del self.panels[1:]#remove all panels from list except image and "your pic"
                         print(f'Destroy-ED panels... list= {len(self.panels)}')
-                    #Also delete from list
                     if type2 == None:
                         # global type1_panel
                         # global type2_panel
-                        message = self.panel(text="Your prediction:", padx = 50, pady=30)
+                        message = self.panel(text="Your prediction:", padx = 30, pady=30, bg="#7ABBEC")
                         message.grid(row=5, column=0,columnspan=1)
                         type1_panel = self.panel(text=type1, bg=dict_color[type1], padx=40, pady=20)#, font="Helvetica")
                         type1_panel.grid(row=5, column=1, columnspan=1)
                     else:
-                        # global type1_panel
-                        # global type2_panel
                         print(len(self.panels))
                         message = self.panel(text="Your prediction:", padx = 50, pady=30, bg="#7ABBEC")
                         message.grid(row=5, column=0,columnspan=1)
@@ -178,6 +189,9 @@ if __name__ == '__main__':
 
         def panel(self, text="", bg=None, padx=1, pady=1, image=None):#, font="Helvetica"):
             created_panel = Label(text=text, bg=bg, padx=padx, pady=pady, image=image)
+            if image != None: #if its an image don't add to panels
+                self.images.append(created_panel)
+                return created_panel
             self.panels.append(created_panel)
             return created_panel     
 

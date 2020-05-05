@@ -10,6 +10,7 @@ import os
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as pltcolors
 from tqdm import tqdm
 import skimage.transform as transform
 from skimage import filters
@@ -133,7 +134,7 @@ def get_luminance(img):
 	return l_avg
 
 
-def array_image(fptr, normalize = True, verbose=True,transparent = False):
+def array_image(fptr, normalize = True, verbose=True,transparent = False, hsv=False):
 	'''Converts image to an array of type defined
 	as float, float32, integer; 8int.
 	array is accessible as:
@@ -144,6 +145,10 @@ def array_image(fptr, normalize = True, verbose=True,transparent = False):
 		image = Image.open(fptr).convert("RGBA") #Image object
 		width, height = image.size
 
+	elif hsv:
+		image = Image.open(fptr).convert("HSV") #Image object
+		width, height = image.size
+
 	else:
 		image = Image.open(fptr).convert("RGB") #Image object
 		width, height = image.size
@@ -152,17 +157,18 @@ def array_image(fptr, normalize = True, verbose=True,transparent = False):
 	# 		image.putpixel((x,y),(float(x)/255,float(y)/255))
 
 
-	if verbose:
-		print(f"Image path is {fptr}")
-		print(f"IMAGE size : {width} x {height}")
+	
 		
 	array_i = np.asarray(image)
-	print(array_i.shape)
+	
 	array_i = array_i.astype(np.float32) # Ensures image is not read-only so it's normalizeable
 	if normalize:
 		array_i /= 255
-	print((array_i[0][0][0]))
-	print(array_i.shape)
+	if verbose:
+		print(f"Image path is {fptr}")
+		print(f"IMAGE size : {width} x {height}")	
+		print((array_i[0][0][0]))
+		print(f"Array shape: {array_i.shape}")
 	return array_i
 
 def pixel_reduce(image_array, mask):
@@ -185,7 +191,9 @@ def centralize_image(image_array, show=False):
 	Takes image, finds object in image by: 1) finding
 	edges based on intensity gradient in picture, 2)
 	finds coordinates of object and 3) returns "centralized"
-	image
+	image. The different stages of the processing can be
+	shown by setting show=True.
+	**Parameters**
 	'''
 	gray_image = rgb2grey(image_array)
 	if show:
@@ -210,7 +218,8 @@ def centralize_image(image_array, show=False):
 	if show:
 		plt.subplot(3,3,5)
 		plt.imshow(selected_image, cmap = plt.cm.gray)
-	coordinate_slices = ndi.measurements.find_objects(selected_image)[0] # Returns Slice of min x,y and max x,y can be directly inputed into image_array
+	coordinate_slices = ndi.measurements.find_objects(selected_image)[0]
+	# Returns Slice of min x,y and max x,y can be directly inputed into image_array
 	
 	new_image = image_array[coordinate_slices]
 	if show:
@@ -225,7 +234,8 @@ def centralize_image(image_array, show=False):
 	# 		plt.subplot(, 3, i+1)
 	# 		plt.imshow(images[i])
 	# 	plt.show()
-	return new_image
+	new_image_r = image_array_resize(new_image, (100,100,3))
+	return new_image_r
 
 
 
@@ -233,22 +243,22 @@ if __name__ == "__main__":
     # fptr = "dog.jpg" #If your image is called "dog.jpg"
     # blur(fptr, mask=7) #Blur with mask of 7
     # set_luminance(fptr, 150.0) #Set luminance to ~150
-	print("Ok!")
-	array_image1 = array_image("Data/pokemon-images-dataset-by-type/all/Arceus.png")
-	#using forward slahses for paths is better
-	print(array_image1.shape)
-	plt.subplot(1,3,1)
+	# print("Ok!")
+	# array_image1 = array_image("Data/pokemon-images-dataset-by-type/all/Arceus.png")
+	# #using forward slahses for paths is better
+	# print(array_image1.shape)
+	# plt.subplot(1,3,1)
 
-	plt.imshow(array_image1)
+	# plt.imshow(array_image1)
 
-	array_image_less_pixels = pixel_reduce(array_image1, mask=2)
-	plt.subplot(1,3,2)
-	plt.imshow(array_image_less_pixels)
+	# array_image_less_pixels = pixel_reduce(array_image1, mask=2)
+	# plt.subplot(1,3,2)
+	# plt.imshow(array_image_less_pixels)
 
-	array_image_borders = sobel_colour(array_image1)
-	plt.subplot(1,3,3)
-	plt.imshow(array_image_borders)
-	plt.show()
+	# array_image_borders = sobel_colour(array_image1)
+	# plt.subplot(1,3,3)
+	# plt.imshow(array_image_borders)
+	# plt.show()
 
 	#For large database:
 	database_dir = "C:/Users/Nelson/Desktop/Software carp/Final project/Data/Train_test_Database"
@@ -256,5 +266,11 @@ if __name__ == "__main__":
 	relative_path1 = os.path.join(database_dir,file_name_X)
 
 	X = np.load(relative_path1, allow_pickle=True)
-	centralize_image(X[500], show= True)
+	centralize_image(X[5000], show= True)
+
+	garch = pltcolors.rgb_to_hsv(X[5000]) #Not normalized
+	garch = image_array_resize(garch, (64,64,3))
+	plt.imshow(garch)
+	plt.show()
+	centralize_image(garch, show=True)
 
