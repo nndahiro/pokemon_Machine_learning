@@ -4,7 +4,6 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' #Suppress TF warning
 import pickle
 from sklearn.model_selection import train_test_split
-#from Pokemon_database_pandas_manipulation.ipynb import load_obj
 from keras.metrics import categorical_accuracy
 from keras.utils import np_utils
 from keras.models import Sequential, load_model, Model
@@ -12,7 +11,7 @@ from keras.layers.core import Dense, Flatten, Dropout, Activation
 from keras.layers import Conv2D, MaxPool2D, BatchNormalization, advanced_activations
 import skimage.transform as transform
 from copy import deepcopy
-from Image_processing import image_array_resize, centralize_image
+from Image_processing import image_array_resize, centralize_image, rgb_hsv
 
 def get_key(val,my_dict):
     '''Get key from dictionary value
@@ -75,6 +74,8 @@ def plot_performance(model, history, output_name):
     print("Test Loss:", loss)
     print("Test Accuracy:", accuracy)
     # Save figure as .png file
+    if output_name[-4:] != ".png":
+        output_name += ".png"
     fig = plt.gcf()
     fig.savefig(output_name)
 
@@ -120,41 +121,8 @@ def show_examples(x, y,output_name,RANDOM=True):
 
 
 
-
-index_type_dict =  load_obj("Dictionary_index_to_type")
-index_to_one_hot = load_obj('Dictionary_index_to_onehot')
-database_dir = "C:/Users/Nelson/Desktop/Software carp/Final project/Data/Train_test_Database"
-file_name_X = "Database_6000_X_images.npy"
-file_name_Y = "Database_6000_Y_labels.npy"
-relative_path1 = os.path.join(database_dir,file_name_X)
-relative_path2 = os.path.join(database_dir, file_name_Y)
-
-X = np.load(relative_path1, allow_pickle=True)
-Y = np.load(relative_path2, allow_pickle=True)
-
-
-#show_examples(X,Y, output_name="pOKEMON_images.png") # Randomly show examples
-# plt.imshow(X[5000])
-# plt.show()
-processed_X = np.array([centralize_image(j) for j in X]) #preprocess and center pics here
-#print(processed_X.reshape(X.shape[0],100,100,3))
-# plt.imshow(processed_X[5000])
-# plt.show()
-
-p_X = np.array([image_array_resize(i, (64,64,3)) for i in processed_X]) #resize them to 100,100,3
-# plt.imshow((p_X[5000]))
-# # plt.show()
-# # print(p_X.shape)
-# BUILD MODEL:
-
-X_train, X_test, Y_train, Y_test = train_test_split(p_X,Y, test_size = 0.2)
-
-
-print(X_train.shape, Y_train.shape,X_test.shape, Y_test.shape)
-
-
-def build_NN(x_train, y_train, x_test, y_test,
-                  model_name=None, epochs, save = True):
+def build_NN(x_train, y_train, x_test, y_test, epochs,
+                  model_name=None, save = True):
     '''
     This function builds the neural network model and subsequently
     fits the model for a specified number of epochs. After running it
@@ -193,7 +161,7 @@ def build_NN(x_train, y_train, x_test, y_test,
 
     **Returns**
 
-        model: *Sequenctial() Object*
+        model: *Sequenctial Object*
             A sequential class that holds the layer structure and paramters
             of the model.
         history:*History Object*
@@ -209,7 +177,7 @@ def build_NN(x_train, y_train, x_test, y_test,
     conv2d_1 = Conv2D(32, kernel_size= (3,3), input_shape = x_train[0].shape)
     activ = Activation('relu')
     model.add(conv2d_1) 
-    #Initialize dense CNN with 32 62x62 inputs
+    #Initialize CNN with 32 62x62 inputs
     conv_layers.append(conv2d_1)
     model.add(BatchNormalization())
     model.add(MaxPool2D(2,2))
@@ -217,21 +185,13 @@ def build_NN(x_train, y_train, x_test, y_test,
     model.add(Dropout(0.1))
     conv2d_2 = Conv2D(64, kernel_size= (3,3)) 
 
-    model.add(conv2d_2) #Initialize dense CNN
+    model.add(conv2d_2) #Adding a CNN
     conv_layers.append(conv2d_2)
     model.add(BatchNormalization())
     model.add(MaxPool2D(2,2))
     model.add(activ)
     model.add(Dropout(0.2))
 
-    conv2d_3 = Conv2D(64, kernel_size= (3,3)) 
-
-    model.add(conv2d_3) #Initialize CNN
-    conv_layers.append(conv2d_3)
-    model.add(BatchNormalization())
-    model.add(MaxPool2D(2,2))
-    model.add(activ)
-    model.add(Dropout(0.2))
 
     model.add(Flatten())
 
@@ -249,8 +209,8 @@ def build_NN(x_train, y_train, x_test, y_test,
                         metrics = ["accuracy"])
     # binary-cross entropy is loss function that poses a binary
     # classification at the output layer when fitting the data.
-    # We do not use other loss functions because each sample
-    # may contain more than 1 label
+    # We do not use other loss functions such as categorical cross
+    # -entropy because each sample may contain more than 1 label
     history = model.fit(x_train,y_train,
                         batch_size = 32,
                         epochs=epochs,
@@ -259,6 +219,8 @@ def build_NN(x_train, y_train, x_test, y_test,
 
     #Save the model
     model_dir_name = os.path.join("Models", model_name)
+    if model_dir_name[-3:] != ".h5":
+        model_dir_name += ".h5"
     save_dir = os.getcwd()
     model_path = os.path.join(save_dir, model_dir_name)
     model.save(model_path)
@@ -267,10 +229,8 @@ def build_NN(x_train, y_train, x_test, y_test,
     #Return the model
     return model, history
 
-# model, history = build_NN(X_train, Y_train, X_test, Y_test, model_name= "Pokemon_ML_image_center_croprelu_3Conv.h5", epochs=10)
 
-# plot_performance(model,history, output_name= "Pokemon_ML_image_center_croprelu_3Conv_performance.png")
-
+#Needed for classification
 type_list = ['bug',
  'dark',
  'dragon',
@@ -290,24 +250,8 @@ type_list = ['bug',
  'steel',
  'water']
 
-poke_model_name = "Models/Pokemon_ML_image_center.h5"
-full_path = os.path.join(os.getcwd(),poke_model_name)
 
-poke_model = load_model(full_path)
-# test = p_X[5000]
-# #print(poke_model.summary())
-# #print(test)
-# plt.imshow(test)
-# plt.show()
-# y_prob = poke_model.predict(test.reshape(1,100,100,3),verbose=1) #Returns array of array
-# print(y_prob)
-# top3 = np.argsort(y_prob[0])[:-4:-1] # argsort returns index of items in descending order
-# print(top3) #17,12,7
-
-# for i in range(3):
-#     print(type_list[top3[i]])
-
-def pokemon_type_predict(image_array, random=False, threshold=2.5):# add random feature here
+def pokemon_type_predict(image_array,trained_model, random=False, threshold=2.5):# add random feature here
     '''
     This function predicts the top 1 or top 2 types
     of an image based on a trained model. It decided
@@ -337,39 +281,50 @@ def pokemon_type_predict(image_array, random=False, threshold=2.5):# add random 
 
 
     '''
-    # tester = p_X[np.random.randint(0,4000)] #
+    # tester = p_hsv_X[np.random.randint(0,4000)] #
     # testee = deepcopy(tester) #
     # plt.imshow(testee)#
     # plt.show() ##
     #image_array reshaped to right shape.
-    label_p = poke_model.predict(np.array([image_array]),verbose=1)
+    #centralized = centralize_image(image_array)
+    label_p = trained_model.predict(np.array([image_array]),verbose=1)
     
     top_label, second_label =  np.argsort(label_p[0])[:-3:-1]
-    if top_label > threshold* second_label:#2.5 is a threshold I picked
+    if top_label > threshold * second_label:#2.5 is a threshold I picked
         return type_list[top_label], None
     top_type, second_type = type_list[top_label], type_list[second_label]
     return top_type, second_type
 
-# pred = np.array(poke_model.predict(X_test, batch_size=512))
-# #print(((categorical_accuracy(Y_test, pred))) * 1)
-# print(poke_model.layers[0])
-# #SEEING IN LAYERS
-# intermediate_layer_model = Model(inputs=poke_model.input,
-#                                  outputs=poke_model.layers[0].output)
-# intermediate_output = intermediate_layer_model.predict(p_X[73].reshape(1,64,64,3))
-# print(intermediate_output.shape)
-# plt.imshow(intermediate_output[0,:,:,30])
-# plt.show()
-# # type1, type2 = pokemon_type_predict(test)
-# print(type1, type2)
+if __name__ == "__main__":
 
-# plt.imshow(test)
-# plt.show()
+    index_type_dict =  load_obj("Dictionary_index_to_type")
+    index_to_one_hot = load_obj('Dictionary_index_to_onehot')
+    database_dir = "C:/Users/Nelson/Desktop/Software carp/Final project/Data/Train_test_Database"
+    file_name_X = "Database_6000_X_images.npy"
+    file_name_Y = "Database_6000_Y_labels.npy"
+    relative_path1 = os.path.join(database_dir,file_name_X)
+    relative_path2 = os.path.join(database_dir, file_name_Y)
 
-# # print(one_hot_to_type([0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0]))
+    X = np.load(relative_path1, allow_pickle=True)
+    Y = np.load(relative_path2, allow_pickle=True)
 
-# a = 0
-# for i in Y:
-#     if list(i) == [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0]:
-#         a += 1
-# print(a)
+    #preprocess and center pics here
+    processed_X = np.array([centralize_image(j) for j in X]) 
+
+    #resize them to 100,100,3
+    p_X = np.array([image_array_resize(i, (64,64,3)) for i in processed_X])
+
+    p_hsv_X = np.array([rgb_hsv(each_image) for each_image in p_X])
+
+    X_hsv_train, X_hsv_test, Y_train, Y_test = train_test_split(p_hsv_X,Y, test_size = 0.2, random_state=1)
+
+    X_train, X_test, Y_train, Y_test = train_test_split(p_X,Y, test_size = 0.2, random_state=1)
+
+    print(X_train.shape, Y_train.shape,X_test.shape, Y_test.shape)
+
+    model, history = build_NN(X_train, Y_train, X_test, Y_test, model_name= "Pokemon_ML_Trained_name.h5", epochs=10)
+
+    plot_performance(model,history, output_name= "Pokemon_ML_Trained_name_performance.png")
+
+
+    
