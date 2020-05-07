@@ -17,14 +17,15 @@ to simply look at a pokemon and predict the type. As a fan of the series I pride
 being able to predict a pokemon's type by looking at it. So I wondered if it was possible to teach a
 computer to learn the same.
 
-As it is the 21st century and humanity is enjoying a period of "Throw AI at it" I decided to build a Neural
-Network to 1) Learn how to do this, and 2) see if neural nets can solve this problem.
+In the 21st century, humanity is enjoying a period of "Throw AI at it" so I decided to jump aboard the AI train and
+build a Neural Network to 1) Learn how they work, and 2) see if neural nets can solve this problem.
 
 The data I acquired to tackle this problem is from Kaggle.com and consists of 100x100 and 120x120 sized images.
 Recently, neural networks have been getting better at classifying images, specifically, convolutional neural
 networks(CNNs). They are good at processing high dimensional data cmpared to using Dense/classical neural networks.
 So I decided to use this structure.
-Pokemon can be up to 2 **types**(by this I mean the pokemon's "element") but can also be 1 type or a pure type.
+
+Pokemon can be up to 2 **types** (by this I mean the pokemon's "element") but they can also be 1 type or a pure type.
 This means that each pokemon image, from the standpoint of a neural network model, is a multi-class sample.
 So now, our problem is shaping up to be a **Multi-class, multi-label, image classification** problem with 18 classes.
 (There are 18 Pokemon Types).
