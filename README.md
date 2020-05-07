@@ -3,7 +3,7 @@ A machine learning approach to predicting pokemon types based on a database of p
 
 ***Background***
 
-These days there are almost too many pokemon to account with almost 900 different kind
+These days there are almost too many pokemon to account for with almost 900 different kind
 span over 8 generations (and counting). Yet, with so many choices to pick from, when playing
 the game it is of utmost importance to have a balanced team. Pokemon are divided into 18
 different **types** broadly based off "elemental" or conceptual ideas. These include: fire, grass,
@@ -52,15 +52,19 @@ Other standard python modules such as scikit, tkinter
 
 Run GUI.py
 
+![](In%20class%20Testing/GUI_screenshot.PNG)
+
+Follow the instructions on the GUI and start predicting pokemon types
 
 Open the GUI.py scrypt and change the model it runs on to see the effect.
 
+
 The "Pokemon_database_pandas_manipulation" Jupyter Notebook show the extraction of images and labels from the databases.
 
-The "Model Testing Notebook" shows the testing of the model as well as
+The "Model Testing Notebook" shows the testing of the model as well as validation.
 
-pokemonIt would be nice indeed to be able to predict a pokemon type just from a picture
+**Notes**
 
-![](In%20class%20Testing/GUI_screenshot.PNG)
+Running the training on the 6036 Database can take long because it is such a big database.
 
-Multiple independent classif and gives probability. Sigmoid gives independent
+Uploading very large pictures in the GUI can take a few seconds to load.
