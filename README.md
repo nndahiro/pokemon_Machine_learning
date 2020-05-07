@@ -63,6 +63,19 @@ The "Pokemon_database_pandas_manipulation" Jupyter Notebook show the extraction 
 
 The "Model Testing Notebook" shows the testing of the model as well as validation.
 
+**References**
+1. https://towardsdatascience.com/journey-to-the-center-of-multi-label-classification-384c40229bff
+
+2. http://keras.io/
+
+3. https://jgeekstudies.org/2017/03/12/who-is-that-neural-network/ Henrique Soares Article
+
+4. Image Processing Function from Modrn Data Analysis class -Rebecca Schulman 
+
+5. Functions from Software Carpentry Class Isaiah Chen Divya Sharma.
+
+6. kaggle.com databases.
+
 **Notes**
 
 Running the training on the 6036 Database can take long because it is such a big database.
