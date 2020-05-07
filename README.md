@@ -1,6 +1,8 @@
 # pokemon_Machine_learning
 A machine learning approach to predicting pokemon types based on a database of pictures.
+
 ***Background***
+
 These days there are almost too many pokemon to account with almost 900 different kind
 span over 8 generations (and counting). Yet, with so many choices to pick from, when playing
 the game it is of utmost importance to have a balanced team. Pokemon are divided into 18
@@ -31,13 +33,30 @@ I created different models (some better than others) and I also build a GUI to m
 to use the model I generated (models are in the Models folder).
 You can Download your own pictures and use the GUI to predict a Pokemon's type.
 
+
 ***Requirements***
+
 TensorFlow instructions can be found at https://www.tensorflow.org/install/pip?lang=python3 whether you have Windows, Linux or Mac
   Note that TensorFlow is not yet compatible with Python 3.8 (As of 6th May 2020) but works with 3.74.
- Keras module: " pip install keras " or go to https://keras.io/#installation
- PIL module: " pip install Pillow"
- Other standard python modules such as scikit, tkinter
+  
+Keras module: " pip install keras " or go to https://keras.io/#installation
 
+PIL module: " pip install Pillow"
+
+Jupyter Notebook Software: if you want to visualize the data manipulation from databases.
+
+Other standard python modules such as scikit, tkinter
+
+***Running***
+
+Run GUI.py
+
+
+Open the GUI.py scrypt and change the model it runs on to see the effect.
+
+The "Pokemon_database_pandas_manipulation" Jupyter Notebook show the extraction of images and labels from the databases.
+
+The "Model Testing Notebook" shows the testing of the model as well as
 
 pokemonIt would be nice indeed to be able to predict a pokemon type just from a picture
 
