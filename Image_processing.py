@@ -1,11 +1,6 @@
 '''
-EN.640.635 Software Carpentry
-Lab 2 - PIL Image Blurring and Luminance
-
-In this lab assignment, we want to write two functions that can manipulate
-images: one to blur the image and one to set the luminance (or brightness) of
-the image.
-	'''
+This is where all the image processing functions are defined
+'''
 import os
 from PIL import Image
 import numpy as np
@@ -21,11 +16,34 @@ from scipy import ndimage as ndi
 
 
 def array_image(fptr, normalize = True, verbose=True,transparent = False, hsv=False):
-	'''Converts image to an array of type defined
-	as float, float32, integer; 8int.
-	array is accessible as:
+	'''Converts an RGB-pixel image to an array of type
+	defined the array is accessible as:
 	array[height][width][color:red,gree,or blue] OR:
-	array[rows][columns][colorsRGB]
+	array[rows][columns][colorsRGB]. You can also
+	normalize the units of the pixels using this file.
+	**Parameters**:
+		fptr: *str*
+			This is the path of the image you want to
+			convert into an array.
+		normalize: *bool*
+			If set to True, the image pixels will be
+			normalized.
+		verbose:*bool*
+			If set to true it will print out information
+			about the original and final image.
+		transparent:*bool*
+			If one wants to plot images in RGBA then your
+			array will be converted to RGBA.
+		hsv: *bool*
+			If you want to output the array in HSV (Hue,
+			Saturation, Value) then the function will
+			output an array in HSV. However, this can only
+			be done if the array is to be normalized as well.
+			RGB->HSV works when normalized.
+	**Returns**
+		array_i: *numpy.array*, *float* or *int*
+			The image that has been turned to an array.
+
 	'''
 	if transparent:
 		image = Image.open(fptr).convert("RGBA") #Image object
@@ -38,11 +56,16 @@ def array_image(fptr, normalize = True, verbose=True,transparent = False, hsv=Fa
 		
 	array_i = np.asarray(image)
 	
-	array_i = array_i.astype(np.float32) # Ensures image is not read-only so it's normalizeable
+	array_i = array_i.astype(np.float32) # Ensures image is not
+	# read-only so it's normalizeable
 	if normalize:
 		array_i /= 255
 
-	if hsv:#To turn to HSV, image must be normalized 
+	if hsv:
+		if normalize is False:
+			print('Can Only convert to HSV if normalize is True')
+
+	if hsv and normalize:#To turn to HSV, image must be normalized 
 		array_i = rgb_hsv(array_i)
 	if verbose:
 		print(f"Image path is {fptr}")
@@ -52,6 +75,23 @@ def array_image(fptr, normalize = True, verbose=True,transparent = False, hsv=Fa
 	return array_i
 
 def pixel_reduce(image_array, mask):
+	'''
+	An image augmentation that blurs the image
+	by a certain factor defined by mask.
+	**Parameters**
+		image_array: *numpy.array*,*float* or *int*
+			The array containing an image to be
+			augmented.
+		mask: *int* or *float*
+			The factor by which the image will be
+			blurred. Will round up or down to closest
+			integer.
+	**Returns**
+		new_image: *numpy.array*
+			The augmented image
+
+	'''
+
 	new_image = transform.resize(image_array, (image_array.shape[0] // int(mask), \
                                                 image_array.shape[1] // int(mask)), \
                                     anti_aliasing=True)
@@ -77,12 +117,6 @@ def image_array_resize(image_array,size):
 	'''
 	new_image = transform.resize(image_array,size)
 	return new_image
-@adapt_rgb(each_channel)
-def sobel_colour(image_array, random=True):
-	'''
-	Finds edges but retains color, cool.
-	'''
-	return filters.sobel(image_array)
 
 def centralize_image(image_array, show=False):
 	'''
@@ -131,7 +165,8 @@ def centralize_image(image_array, show=False):
 		plt.subplot(3,3,5)
 		plt.imshow(selected_image, cmap = plt.cm.gray)
 	coordinate_slices = ndi.measurements.find_objects(selected_image)[0]
-	# Returns Slice of min x,y and max x,y can be directly inputed into image_array
+	# Returns Slice of min x,y and max x,y
+	# can be directly inputed into image_array
 	
 	new_image = image_array[coordinate_slices]
 	if show:

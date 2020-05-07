@@ -1,5 +1,8 @@
+'''
+The GUI to be run is defined here and is ready
+to be run.
+'''
 import matplotlib.pyplot as plt
-import turtle
 import os
 from tkinter import *
 from tkinter import filedialog
@@ -36,7 +39,7 @@ class GUI(Tk):
         of the Tk class from tkinter module with additional
         functionality that we use. It is a Graphical User Interface
         with buttons, panels, images and an entrybox. It also holds
-        the particular predictive model that will run type prediction
+        the particular predictive model that will run type prediction.
         These are all specified as the GUI class instance is built.
         **Parameters**
             buttons: *Tkinter Button Object*
@@ -85,7 +88,6 @@ class GUI(Tk):
                             #Can't call function so Have to use lambda
             self.buttons.append([button,name,b_row,b_column, type_of_button])
         elif type_of_button.lower() == "predict":
-            type_of_b = None #TODO
             self.loadimage = PhotoImage(file=os.path.join(os.getcwd(),"pokeball2.png"))
             button = Button(self, image=self.loadimage,
                             command = lambda: self.image_plotter_predictor(entry_box))
@@ -104,18 +106,18 @@ class GUI(Tk):
         entry = Entry(self, width=60)
         entry.grid(row=e_row, column=e_column, columnspan= span)
         return entry 
-        # So that you can access a specific entry object in GUI
+        # returns entry so that you can access
+        # a specific entry object in GUI
 
-    def file_explorer(self, entry_box, window_title="Choose Pokemon Picture"):
+    def file_explorer(self, entry_box, window_title="Choose a Pokemon Picture"):
         filename = filedialog.askopenfilename(title=window_title, initialdir="/",
                                                     filetypes = (("jpg files", "*.jpg"),
                                                     ("png files", "*.png"), 
                                                     ("numpy files", "*.npy"),
                                                     ("jpeg files", "*.jpeg")))
         # ^ Returns a string of path
-        entry_box.delete(0, END)
+        entry_box.delete(0, END) #removes what was previously there
         entry_box.insert(0, filename)
-        #Need to specify which entry_box I am referring to
         return filename #So we have access to the path string
 
     def image_plotter_predictor(self, entry_box):
@@ -147,7 +149,7 @@ class GUI(Tk):
                 else: #no image prior
                     panel = self.panel(image=img)
                     panel.image = img 
-                # ^THIS IS needed as a reference because python will get rid
+                # ^THIS is needed as a reference because python will get rid
                 # of image while parsing: Tkinter issue
                 #ref http://effbot.org/pyfaq/why-do-my-tkinter-images-not-appear.htm
                 panel.grid(row = 4, column = 0, columnspan= 3)
@@ -160,8 +162,11 @@ class GUI(Tk):
                 # Crop picture and augment/blur it.
                 clean_image = centralize_image(predict_img)
                 predict_img_resized_for_model = image_array_resize(clean_image, (64,64,3))
-                
-                type1, type2 = ptp(predict_img_resized_for_model,trained_model=self.poke_model)
+                try:
+                    type1, type2 = ptp(predict_img_resized_for_model,trained_model=self.poke_model)
+                except ValueError: #If you are running the 100x100 model
+                    predict_img_resized_for_model = image_array_resize(clean_image, (100,100,3))
+                    type1, type2 = ptp(predict_img_resized_for_model,trained_model=self.poke_model)
                 
                 if len(self.panels) >=3:
                     # Check if "Your prediction", "type1" and "your picture"
@@ -201,7 +206,7 @@ class GUI(Tk):
     def panel(self, text="", bg=None, padx=1, pady=1, image=None):
         created_panel = Label(text=text, bg=bg, padx=padx, pady=pady, image=image)
         if image != None: 
-            #if its an image don't add to panels, add to pictures
+            #if its an image don't add to panels, add to images
             self.images.append(created_panel)
             return created_panel
         self.panels.append(created_panel)
@@ -212,21 +217,22 @@ class GUI(Tk):
 if __name__ == '__main__':
  
     cwd = os.getcwd()
-    model_name = "Pokemon_ML_image_center.h5"
+    model_name = "Pokemon_ML_image_center.h5" #Change model to use here
     folder_path = os.path.join("Models",model_name)
     full_m_path = os.path.join(cwd, folder_path)
     p_model = load_model(full_m_path)
 
     
     root = GUI(poke_model=p_model)
+    root.minsize(200,200)
     root.configure(bg="#7ABBEC")
     
-    entry_b = root.entry_box(0,0,2)
-    root.button('Browse', 0,2, type_of_button='browse', entry_box= entry_b)
+    entry_b = root.entry_box(0,0,2) # place entry box
+    root.button('Browse', 0,2, type_of_button='browse', entry_box= entry_b)  # place button
     root.button("PokeAI", 2,1, type_of_button='predict', entry_box= entry_b)
     welcome_label = Label(root, 
                         text="Hello Trainer! \n Please upload a picture by Browsing in your files \n and press the button below to predict pokemon type(s).",
                         bg="#7ABBEC", font= ("Helvetica", 11))
-    welcome_label.grid(row=1,column=0, columnspan=3)
+    welcome_label.grid(row=1,column=0, columnspan=3) # place welcome panel
 
-    root.mainloop()
+    root.mainloop() # Run GUI loop

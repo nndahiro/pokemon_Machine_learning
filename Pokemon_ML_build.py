@@ -27,12 +27,35 @@ def one_hot_to_type(one_h, as_string = True):
     ''' The Y_data returns a label (pokemon type)
     in the form of a list so this is a way to go
     to the pokemon type using the 2 dictionary
-    it returns a string of a list
+    it returns a string of a list containing the
+    types. Refer to
+    "Pokemon_database_pandas_manipulation.ipynb"
+    for more information on why we use 2
+    dictionaries.
+    **Parameters**:
+        one_h: *np.array*,*int*
+            The one-hot vector encoding the label
+            of a sample. It has 18 numbers, a 1
+            corresponds to a certain pokemon type
+            being present in the picture. 0 means
+            the type is not present. All
+            pokemon images have at most 2 types.
+        as_string: *bool*
+            Whether to return a list or a string
+            with the type information. Typically
+            you only need the string
+    **Returns**:
+        type_string: *str*
+            The decoded types in a string
+        type_list: *list*,*str*
+            The decoded types in a list
     '''
     indexer = get_key(one_h, index_to_one_hot)
     if as_string:
-        return f"{index_type_dict.get(indexer)}"
-    return index_type_dict.get(indexer)
+        type_string = f"{index_type_dict.get(indexer)}"
+        return type_string
+    type_list = index_type_dict.get(indexer)
+    return type_list
 
 def plot_performance(model, history, output_name):
     '''
@@ -50,6 +73,7 @@ def plot_performance(model, history, output_name):
     **Returns**
 
         None
+    From Divya and Isaiah in Software Carpentry Class JHU, 2020.
     '''
     # Plot accuracy
     plt.figure()
@@ -76,46 +100,6 @@ def plot_performance(model, history, output_name):
     # Save figure as .png file
     if output_name[-4:] != ".png":
         output_name += ".png"
-    fig = plt.gcf()
-    fig.savefig(output_name)
-
-
-def show_examples(x, y,output_name,RANDOM=True):
-    '''
-    Save an image containing an assortment of nine training images along with
-    the corresponding labels.
-
-    **Parameters**
-
-        x: *numpy.ndarray*
-            A set of training data.
-        y: *numpy.ndarray*
-            A set of labels for the corresponding training data.
-        RANDOM: *bool, optional*
-            A flag to decide if the selected images will be random or not. If
-            changed to False, the image will show the first nine examples from
-            the dataset.
-        output_name: *str, optional*
-            The filename of the output image.
-
-    **Returns**
-
-        None
-    '''
-    # Shuffle the training data if desired
-    if RANDOM:
-        p = np.random.permutation(len(x))
-        x, y = x[p], y[p]
-    # Plot figure using matplotlib
-    plt.figure()
-    for i in range(9):
-        plt.subplot(3, 3, i + 1)
-        plt.tight_layout()
-        plt.imshow(x[i], cmap='gray', interpolation='none')
-        plt.title("type: {}".format(one_hot_to_type(y[i])))
-        plt.xticks([])
-        plt.yticks([])
-    # Save figure as .png file
     fig = plt.gcf()
     fig.savefig(output_name)
 
@@ -168,29 +152,26 @@ def build_NN(x_train, y_train, x_test, y_test, epochs,
             A History object that holds the weights of the trained model.
 
     '''
-    # for each_image in x_train:#blur
-    #     each_image = transform.resize(each_image, (each_image.shape[0] // 4, \
-    #                                             each_image.shape[1] // 4), \
-    #                                 anti_aliasing=True)
-    conv_layers = []
+
+
     model = Sequential()
     conv2d_1 = Conv2D(32, kernel_size= (3,3), input_shape = x_train[0].shape)
     activ = Activation('relu')
     model.add(conv2d_1) 
     #Initialize CNN with 32 62x62 inputs
-    conv_layers.append(conv2d_1)
     model.add(BatchNormalization())
     model.add(MaxPool2D(2,2))
     model.add(activ)
     model.add(Dropout(0.1))
     conv2d_2 = Conv2D(64, kernel_size= (3,3)) 
 
-    model.add(conv2d_2) #Adding a CNN
-    conv_layers.append(conv2d_2)
+    model.add(conv2d_2) #Adding another CNN
     model.add(BatchNormalization())
     model.add(MaxPool2D(2,2))
     model.add(activ)
     model.add(Dropout(0.2))
+
+    #Can add more CNNs if you want...
 
 
     model.add(Flatten())
@@ -218,7 +199,7 @@ def build_NN(x_train, y_train, x_test, y_test, epochs,
                         validation_data=(x_test,y_test))
 
     #Save the model
-    model_dir_name = os.path.join("Models", model_name)
+    model_dir_name = os.path.join("New_Models", model_name)
     if model_dir_name[-3:] != ".h5":
         model_dir_name += ".h5"
     save_dir = os.getcwd()
@@ -251,7 +232,7 @@ type_list = ['bug',
  'water']
 
 
-def pokemon_type_predict(image_array,trained_model, random=False, threshold=2.5):# add random feature here
+def pokemon_type_predict(image_array,trained_model, random=False, threshold=2.5):
     '''
     This function predicts the top 1 or top 2 types
     of an image based on a trained model. It decided
@@ -281,12 +262,7 @@ def pokemon_type_predict(image_array,trained_model, random=False, threshold=2.5)
 
 
     '''
-    # tester = p_hsv_X[np.random.randint(0,4000)] #
-    # testee = deepcopy(tester) #
-    # plt.imshow(testee)#
-    # plt.show() ##
-    #image_array reshaped to right shape.
-    #centralized = centralize_image(image_array)
+
     label_p = trained_model.predict(np.array([image_array]),verbose=1)
     
     top_label, second_label =  np.argsort(label_p[0])[:-3:-1]
@@ -297,11 +273,14 @@ def pokemon_type_predict(image_array,trained_model, random=False, threshold=2.5)
 
 if __name__ == "__main__":
 
+    cwd = os.getcwd()
     index_type_dict =  load_obj("Dictionary_index_to_type")
     index_to_one_hot = load_obj('Dictionary_index_to_onehot')
-    database_dir = "C:/Users/Nelson/Desktop/Software carp/Final project/Data/Train_test_Database"
-    file_name_X = "Database_6000_X_images.npy"
+    database_dir = os.path.join(cwd,"Data/Train_test_Database")
+    file_name_X = "Database_6000_X_images.npy" 
     file_name_Y = "Database_6000_Y_labels.npy"
+    # Can load your own database using workflow in:
+    # "Pokemon_database_pandas_manipulation.ipynb"
     relative_path1 = os.path.join(database_dir,file_name_X)
     relative_path2 = os.path.join(database_dir, file_name_Y)
 
@@ -314,17 +293,22 @@ if __name__ == "__main__":
     #resize them to 100,100,3
     p_X = np.array([image_array_resize(i, (64,64,3)) for i in processed_X])
 
-    p_hsv_X = np.array([rgb_hsv(each_image) for each_image in p_X])
+    #p_hsv_X = np.array([rgb_hsv(each_image) for each_image in p_X])
+    # # UnComment if you want to train the HSV model
 
-    X_hsv_train, X_hsv_test, Y_train, Y_test = train_test_split(p_hsv_X,Y, test_size = 0.2, random_state=1)
+    #X_hsv_train, X_hsv_test, Y_train, Y_test = train_test_split(p_hsv_X,Y,
+    #                                            test_size = 0.2, random_state=1)
+    # # UnComment if you want to train the HSV model
 
-    X_train, X_test, Y_train, Y_test = train_test_split(p_X,Y, test_size = 0.2, random_state=1)
+    X_train, X_test, Y_train, Y_test = train_test_split(p_X,Y, test_size = 0.2,
+                                                         random_state=1)
+    #  Shuffle, split training and testing set by a user-defined ratio train:test.
 
     print(X_train.shape, Y_train.shape,X_test.shape, Y_test.shape)
 
-    model, history = build_NN(X_train, Y_train, X_test, Y_test, model_name= "Pokemon_ML_Trained_name.h5", epochs=10)
+    model, history = build_NN(X_train, Y_train, X_test, Y_test, model_name= "Pokemon_ML_your_trained_model.h5", epochs=10)
 
-    plot_performance(model,history, output_name= "Pokemon_ML_Trained_name_performance.png")
+    plot_performance(model,history, output_name= "Pokemon_ML_your_trained_model_performance.png")
 
 
     
