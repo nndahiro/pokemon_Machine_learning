@@ -61,6 +61,6 @@ The "Model Testing Notebook" shows the testing of the model as well as
 
 pokemonIt would be nice indeed to be able to predict a pokemon type just from a picture
 
-![](In%20class%20Testing/charizard.jpg)
+![](In%20class%20Testing/GUI_screenshot.PNG)
 
 Multiple independent classif and gives probability. Sigmoid gives independent
