@@ -1,5 +1,6 @@
 # pokemon_Machine_learning
 A machine learning approach to predicting pokemon types based on a database of pictures.
+<img src="In%20class%20Testing/charizard.jpg" width="500" height="400">
 
 ***Background***
 
